@@ -25,5 +25,13 @@ lein repl
 
 => (start-cluster c)
 
+### Get External Shortly IP
+
+=> (shortly-ips c)
+
+goto: http://\<ip-address\>:5000
+
+### Shutdown Cluster
+
 => (stop-cluster c)
 
