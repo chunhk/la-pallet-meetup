@@ -5,13 +5,15 @@ Deploys two url shortener webapp servers and redis master-slaves
 
 ## Usage
 
-Setup pallet configuration:
+### Create ~/.pallet/config.clj
 
 (defpallet
   :services
     {:aws {:provider "aws-ec2" 
            :identity "<access-key-id>"
            :credential "<secret-access-key>"}})
+
+### Run Project
 
 lein deps
 
