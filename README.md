@@ -14,10 +14,14 @@ Setup pallet configuration:
            :credential "<secret-access-key>"}})
 
 lein deps
+
 lein repl
 
 => (use 'pallet-meetup.demo)
+
 => (def c (cluster))
+
 => (start-cluster c)
+
 => (stop-cluster c)
 
