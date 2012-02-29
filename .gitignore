@@ -1,0 +1,6 @@
+*.class
+*.swp
+*.jar
+*.log
+lib
+.lein-deps-sum
