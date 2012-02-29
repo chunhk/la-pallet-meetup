@@ -10,8 +10,8 @@ Deploys two url shortener webapp servers and redis master-slaves
 (defpallet
   :services
     {:aws {:provider "aws-ec2" 
-           :identity "<access-key-id>"
-           :credential "<secret-access-key>"}})
+           :identity "\<access-key-id\>"
+           :credential "\<secret-access-key\>"}})
 
 ### Run Project
 
