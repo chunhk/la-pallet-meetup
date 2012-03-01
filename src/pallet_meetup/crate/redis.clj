@@ -3,6 +3,7 @@
    [pallet.core :as pallet-core]
    [pallet.phase :as phase]
    [pallet.action.exec-script :as exec-script]
+   [pallet.action.service :as service]
    [pallet.action.package :as package]
    [pallet-meetup.core :as core]))
 
@@ -10,20 +11,18 @@
 
 (defn redis-start
   [session]
-  (exec-script/exec-script session "/etc/init.d/redis-server start"))
+  (service/service session "redis-server" :action :start))
 
 (defn redis-stop
   [session]
-  (exec-script/exec-script session "/etc/init.d/redis-server stop"))
+  (service/service session "redis-server" :action :stop))
 
 (defn redis-restart
   [session]
-  (exec-script/exec-script session "/etc/init.d/redis-server restart"))
+  (service/service session "redis-server" :action :restart))
 
-(defn configure-redis
-  [session]
-  (->
-    session
+(def configure-redis
+  (phase/phase-fn
     (exec-script/exec-script
       "sed -i s/\"^bind 127\\.0\\.0\\.1\"/\"#bind 127.0.0.1\"/ /etc/redis/redis.conf")
     (redis-restart)))
@@ -39,5 +38,4 @@
   (pallet-core/server-spec
     :phases {
       :install (phase/phase-fn (package/package "redis-server")
-                               (configure-redis))}))
-
+                               configure-redis)}))

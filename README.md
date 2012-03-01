@@ -29,9 +29,8 @@ lein repl
 
 => (shortly-ips c)
 
-goto: http://\<ip-address\>:5000
+point browser to http://\<ip-address\>:5000
 
 ### Shutdown Cluster
 
-=> (stop-cluster c)
-
+=> (shutdown-cluster c)
