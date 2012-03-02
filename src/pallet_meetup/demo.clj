@@ -7,6 +7,7 @@
     [pallet.phase :as phase]
     [pallet.compute.node-list :as node-list]
     [pallet.action.package :as package]
+    [pallet-meetup.core :as core]
     [pallet-meetup.environ :as environ]
     [pallet-meetup.crate.redis :as redis]
     [pallet-meetup.crate.shortly :as shortly]))
@@ -41,16 +42,24 @@
               redis/redis-spec]
     :node-spec redis-node))
 
+(def redis-slave-server
+  (server-spec
+    :extends [base-spec
+              redis/redis-slave-spec]
+    :node-spec redis-node))
+
 (def shortly-group 
   (group-spec "shortly-group" 
     :extends shortly-server))
 
 (def redis-slave-group 
   (group-spec "redis-slave-group" 
-    :extends redis-server))
+    :roles redis/slave-role
+    :extends redis-slave-server))
 
 (def redis-master-group
   (group-spec "redis-master-group"
+    :roles redis/master-role
     :extends redis-server))
 
 (defn cluster
@@ -66,26 +75,17 @@
      :compute-service (service environ/aws-provider)
      :compute-service-id environ/aws-provider})))
 
-(defn get-ips
-  [tag cluster ip-type]
-  (let [f (if (= ip-type :internal) private-ip primary-ip)
-        prefixed-tag (keyword (str (:prefix cluster) tag))]
-    (map #(f %)
-         (get (nodes-by-tag (nodes (:compute-service cluster)))
-              prefixed-tag))))
+(defn redis-master-ip
+  [cluster ip-type]
+  (core/get-first-ip (:redis-master-tag cluster) (:compute-service cluster) ip-type))
 
-(defn get-first-ip
-  [tag cluster ip-type]
-  (first (get-ips tag cluster ip-type)))
+(defn redis-slave-ips
+  [cluster ip-type]
+  (core/get-ips (:redis-slave-tag cluster) (:compute-service cluster) ip-type))
 
-(def redis-master-ip
-  (partial get-first-ip "redis-master-group"))
-
-(def redis-slave-ips
-  (partial get-ips "redis-slave-group"))
-
-(def shortly-ips
-   (partial get-ips "shortly-group"))
+(defn shortly-ips
+  [cluster ip-type]
+  (core/get-ips (:shortly-tag cluster) (:compute-service cluster) ip-type))
 
 (defn cluster-converge
   ([cluster node-map phases]
@@ -115,16 +115,8 @@
 (defn instance-setup
   [cluster]
   (cluster-lift cluster
-    [shortly-group redis-master-group redis-slave-group] [:install]))
+    [shortly-group redis-master-group redis-slave-group] [:install :configure-redis-slaves]))
  
-(defn configure-redis
-  [cluster]
-  (let [prefix (:prefix cluster)
-        redis-master (redis-master-ip cluster :internal)
-        redis-slaves (redis-slave-ips cluster :internal)
-        configure-redis (redis/configure-slave redis-master)]
-    (cluster-lift cluster [redis-slave-group] [configure-redis])))
-
 (defn configure-shortly
   [cluster]
   (let [prefix (:prefix cluster)
@@ -141,7 +133,6 @@
   [cluster]
   (startup-instances cluster)
   (instance-setup cluster)
-  (configure-redis cluster)
   (configure-shortly cluster)
   (start-shortly cluster))
   
