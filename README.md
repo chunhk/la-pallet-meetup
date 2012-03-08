@@ -27,7 +27,7 @@ lein repl
 
 ### Get External Shortly IP
 
-=> (shortly-ips c)
+=> (shortly-ips c :external)
 
 point browser to http://\<ip-address\>:5000
 
